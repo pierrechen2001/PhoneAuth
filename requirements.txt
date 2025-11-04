@@ -1,0 +1,16 @@
+# Django 核心框架
+Django==4.2.7
+djangorestframework==3.14.0
+
+# OpenAPI 文件生成
+drf-spectacular==0.27.0
+
+# Firebase Admin SDK (用於手機驗證)
+firebase-admin==6.3.0
+
+# 環境變數管理
+python-decouple==3.8
+
+# CORS 處理（如果前端需要跨域請求）
+django-cors-headers==4.3.1
+

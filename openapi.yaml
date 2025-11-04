@@ -1,0 +1,355 @@
+openapi: 3.0.3
+info:
+  title: Phone Authentication API
+  version: 1.0.0
+  description: |
+    手機號碼綁定驗證 API
+    
+    提供完整的手機號碼綁定、OTP 發送與驗證功能，整合 Firebase Phone Authentication。
+    
+    ## 認證方式
+    
+    所有 API 端點都需要使用者登入。支援以下認證方式：
+    - Session Authentication（瀏覽器 Cookie）
+    - Token Authentication（API Token）
+    - Basic Authentication（使用者名稱 + 密碼）
+    
+    ## 流程說明
+    
+    1. 使用者在前端輸入手機號碼
+    2. 呼叫 `/send-otp/` API（後端記錄狀態）
+    3. 前端使用 Firebase JS SDK 發送 OTP
+    4. 使用者收到 SMS，輸入驗證碼
+    5. 前端使用 Firebase JS SDK 驗證 OTP，取得 ID Token
+    6. 呼叫 `/verify-otp/` API，傳入 ID Token
+    7. 後端驗證 Token，更新使用者資料
+    
+    ## 錯誤處理
+    
+    - 每個驗證 session 最多錯誤 3 次
+    - 達到錯誤上限後會被鎖定，需重新發送 OTP
+    - Rate Limiting：60 秒內限制重複發送
+
+servers:
+  - url: http://127.0.0.1:8000
+    description: 開發環境
+  - url: https://api.yourdomain.com
+    description: 生產環境
+
+tags:
+  - name: phone-auth
+    description: 手機號碼驗證相關 API
+
+paths:
+  /auth/phone/send-otp/:
+    post:
+      tags:
+        - phone-auth
+      summary: 發送 OTP 驗證碼
+      description: |
+        發送手機驗證碼到指定號碼。
+        
+        **注意**: 實際的 OTP 發送在前端使用 Firebase JS SDK 完成，
+        此 API 主要用於記錄狀態與進行後端驗證。
+        
+        **Rate Limiting**: 60 秒內只能發送一次
+      operationId: sendOTP
+      security:
+        - sessionAuth: []
+        - tokenAuth: []
+        - basicAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - country_code
+                - phone_number
+              properties:
+                country_code:
+                  type: string
+                  description: 國碼（必須以 + 開頭）
+                  example: "+886"
+                  pattern: '^\+\d{1,3}$'
+                phone_number:
+                  type: string
+                  description: 手機號碼（不含國碼）
+                  example: "987654321"
+                  pattern: '^\d{7,15}$'
+      responses:
+        '200':
+          description: OTP 發送成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "OTP_SENT"
+                  message:
+                    type: string
+                    example: "驗證碼已發送到您的手機"
+                  expires_in:
+                    type: integer
+                    example: 300
+                    description: 驗證碼有效期限（秒）
+                  note:
+                    type: string
+                    example: "前端需使用 Firebase JS SDK 的 signInWithPhoneNumber 方法"
+        '400':
+          description: 輸入資料格式錯誤
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: 未登入
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: 請求過於頻繁
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "TOO_MANY_REQUESTS"
+                  message:
+                    type: string
+                    example: "請求過於頻繁，請等待 45 秒後再試"
+                  retry_after:
+                    type: integer
+                    example: 45
+                    description: 需要等待的秒數
+
+  /auth/phone/verify-otp/:
+    post:
+      tags:
+        - phone-auth
+      summary: 驗證 OTP 代碼
+      description: |
+        驗證使用者輸入的 OTP 代碼。
+        
+        支援兩種驗證方式：
+        1. **使用 ID Token（建議）**: 前端完成 Firebase 驗證後，將 ID Token 傳給後端
+        2. **使用 verification_id + otp_code（傳統）**: 直接傳送驗證資訊
+        
+        **錯誤次數限制**: 每個 session 最多錯誤 3 次，達到上限會被鎖定
+      operationId: verifyOTP
+      security:
+        - sessionAuth: []
+        - tokenAuth: []
+        - basicAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - type: object
+                  title: 使用 ID Token（建議）
+                  required:
+                    - id_token
+                  properties:
+                    id_token:
+                      type: string
+                      description: Firebase ID Token
+                      example: "eyJhbGciOiJSUzI1NiIs..."
+                - type: object
+                  title: 使用 verification_id + otp_code
+                  required:
+                    - verification_id
+                    - otp_code
+                  properties:
+                    verification_id:
+                      type: string
+                      description: Firebase verification session ID
+                      example: "xxxxxx"
+                    otp_code:
+                      type: string
+                      description: 使用者輸入的驗證碼（4-6 位數字）
+                      example: "123456"
+                      pattern: '^\d{4,6}$'
+      responses:
+        '200':
+          description: 驗證成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "VERIFIED"
+                  phone_number:
+                    type: string
+                    example: "+886987654321"
+                  message:
+                    type: string
+                    example: "手機號碼驗證成功"
+        '400':
+          description: 驗證碼錯誤
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "INVALID_OTP"
+                  remaining_attempts:
+                    type: integer
+                    example: 2
+                    description: 剩餘嘗試次數
+                  message:
+                    type: string
+                    example: "驗證碼錯誤，您還有 2 次機會"
+        '401':
+          description: 未登入
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: 已鎖定（錯誤次數達到上限）
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "LOCKED"
+                  message:
+                    type: string
+                    example: "驗證失敗次數過多，請重新發送驗證碼"
+
+  /auth/phone/resend-otp/:
+    post:
+      tags:
+        - phone-auth
+      summary: 重新發送 OTP 驗證碼
+      description: |
+        重新發送 OTP 驗證碼到指定手機號碼。
+        
+        **Rate Limiting**: 60 秒內只能發送一次
+        
+        重新發送後會：
+        - 重置錯誤次數
+        - 產生新的 verification_id
+        - 解除 LOCKED 狀態
+      operationId: resendOTP
+      security:
+        - sessionAuth: []
+        - tokenAuth: []
+        - basicAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - phone_number
+              properties:
+                phone_number:
+                  type: string
+                  description: 完整手機號碼（包含國碼）
+                  example: "+886987654321"
+                  pattern: '^\+\d{1,3}\d{7,15}$'
+      responses:
+        '200':
+          description: OTP 重新發送成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "OTP_RESENT"
+                  message:
+                    type: string
+                    example: "驗證碼已重新發送"
+                  retry_after:
+                    type: integer
+                    example: 60
+                    description: 下次可重發的等待時間（秒）
+                  note:
+                    type: string
+                    example: "前端需使用 Firebase JS SDK 重新發送"
+        '400':
+          description: 手機號碼不符
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: 未登入
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: 請求過於頻繁
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "TOO_MANY_REQUESTS"
+                  message:
+                    type: string
+                    example: "請求過於頻繁，請等待 45 秒後再試"
+                  retry_after:
+                    type: integer
+                    example: 45
+
+components:
+  schemas:
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: 錯誤代碼
+          example: "VALIDATION_ERROR"
+        message:
+          type: string
+          description: 錯誤訊息
+          example: "輸入資料格式錯誤"
+        details:
+          type: object
+          description: 詳細錯誤資訊（可選）
+          additionalProperties: true
+          example:
+            phone_number:
+              - "手機號碼格式錯誤"
+
+  securitySchemes:
+    sessionAuth:
+      type: apiKey
+      in: cookie
+      name: sessionid
+      description: Django Session Cookie
+    
+    tokenAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: Token
+      description: Django REST Framework Token
+    
+    basicAuth:
+      type: http
+      scheme: basic
+      description: 基本認證（使用者名稱 + 密碼）
+
