@@ -4,7 +4,7 @@
 1. 使用者輸入「國碼 + 手機號碼」
 2. 按下「發送簡訊驗證碼」 → 由 Firebase 送出 OTP
 3. 進入「輸入驗證碼頁面」
-4. 使用者輸入 4~6 位驗證碼（可錯 3 次）
+4. 使用者輸入 6 位驗證碼（可錯 3 次）
 5. 驗證成功後 → Django 後端更新使用者資料（phone_number_verified=True）
 
 頁面與對應 API 規格
@@ -36,9 +36,7 @@ Request Body:
 { "verification_id": "xxxxxx",
   "otp_code": "123456"}
 後端行為：
-呼叫 Firebase Auth 驗證該 OTP（使用 Admin SDK）
-credential = auth.PhoneAuthProvider.credential(verification_id, otp_code)
-user_record = auth.verify_id_token(credential)
+伺服器驗證該 6 位 OTP（使用 verification_id + otp_code）
 記錄驗證狀態、錯誤次數
 回傳成功 / 失敗狀態
 驗證成功 → 更新本地使用者資料表

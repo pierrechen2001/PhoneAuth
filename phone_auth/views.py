@@ -172,15 +172,10 @@ def verify_otp(request):
     
     API Endpoint: POST /auth/phone/verify-otp/
     
-    Request Body (方法一 - 傳統方式):
+    Request Body（唯一方式）:
     {
         "verification_id": "xxxxxx",
         "otp_code": "123456"
-    }
-    
-    Request Body (方法二 - 建議使用):
-    {
-        "id_token": "eyJhbGciOiJSUzI1NiIs..."
     }
     
     Response (Success):
@@ -204,7 +199,7 @@ def verify_otp(request):
     }
     
     注意事項：
-    1. 建議使用方法二（id_token），安全性更高
+    1. 僅支援 6 位數 OTP 驗證
     2. 每個 verification session 最多錯誤 3 次
     3. 達到錯誤上限後需重新發送 OTP
     """
@@ -235,125 +230,68 @@ def verify_otp(request):
             status=status.HTTP_403_FORBIDDEN
         )
     
-    # 方法二：使用 ID Token（建議）
-    if 'id_token' in validated_data:
-        id_token = validated_data['id_token']
-        result = firebase_service.verify_id_token(id_token)
-        
-        if result.get('success'):
-            verified_phone = result.get('phone_number')
-            firebase_uid = result.get('uid')
-            
-            # 更新使用者資料
-            user.phone_number = verified_phone
-            user.phone_verified = True
-            user.verification_status = CustomUser.VerificationStatus.VERIFIED
-            user.otp_attempts = 0
-            user.save()
-            
-            # 記錄日誌
-            OTPVerificationLog.objects.create(
-                user=user,
-                phone_number=verified_phone,
-                action='VERIFY_SUCCESS',
-                success=True
-            )
-            
-            logger.info(f"手機驗證成功：user={user.username}, phone={verified_phone}")
-            
-            return Response(
-                {
-                    'status': 'VERIFIED',
-                    'phone_number': verified_phone,
-                    'message': '手機號碼驗證成功'
-                },
-                status=status.HTTP_200_OK
-            )
-        else:
-            # 驗證失敗
-            user.increment_otp_attempts()
-            remaining = 3 - user.otp_attempts
-            
-            error_msg = result.get('error', '驗證失敗')
-            logger.warning(f"手機驗證失敗：user={user.username}, attempts={user.otp_attempts}")
-            
-            # 記錄日誌
-            OTPVerificationLog.objects.create(
-                user=user,
-                phone_number=user.phone_number or '',
-                action='VERIFY_FAILED',
-                success=False,
-                error_message=error_msg
-            )
-            
-            if user.verification_status == CustomUser.VerificationStatus.LOCKED:
-                return Response(
-                    {
-                        'status': 'LOCKED',
-                        'message': '驗證失敗次數過多，請重新發送驗證碼'
-                    },
-                    status=status.HTTP_403_FORBIDDEN
-                )
-            else:
-                return Response(
-                    {
-                        'status': 'INVALID_OTP',
-                        'remaining_attempts': remaining,
-                        'message': f'驗證碼錯誤，您還有 {remaining} 次機會'
-                    },
-                    status=status.HTTP_400_BAD_REQUEST
-                )
+    verification_id = validated_data['verification_id']
+    otp_code = validated_data['otp_code']
     
-    # 方法一：使用 verification_id + otp_code（傳統方式）
+    result = firebase_service.verify_otp(verification_id, otp_code)
+    
+    if result.get('success'):
+        # 模擬驗證成功（實際應從 result 取得已驗證的手機號碼）
+        verified_phone = user.phone_number
+        
+        user.phone_verified = True
+        user.verification_status = CustomUser.VerificationStatus.VERIFIED
+        user.otp_attempts = 0
+        user.save()
+        
+        # 記錄日誌
+        OTPVerificationLog.objects.create(
+            user=user,
+            phone_number=verified_phone or '',
+            action='VERIFY_SUCCESS',
+            success=True
+        )
+        
+        logger.info(f"手機驗證成功：user={user.username}, phone={verified_phone}")
+        
+        return Response(
+            {
+                'status': 'VERIFIED',
+                'phone_number': verified_phone,
+                'message': '手機號碼驗證成功'
+            },
+            status=status.HTTP_200_OK
+        )
     else:
-        verification_id = validated_data['verification_id']
-        otp_code = validated_data['otp_code']
+        user.increment_otp_attempts()
+        remaining = 3 - user.otp_attempts
         
-        result = firebase_service.verify_otp(verification_id, otp_code)
+        # 記錄日誌
+        OTPVerificationLog.objects.create(
+            user=user,
+            phone_number=user.phone_number or '',
+            action='VERIFY_FAILED',
+            success=False,
+            error_message=result.get('error', '驗證失敗')
+        )
         
-        # 處理邏輯同上（為簡化，此處省略重複代碼）
-        # 實際專案中應將驗證邏輯抽取為共用方法
-        
-        if result.get('success'):
-            # 模擬驗證成功（實際應從 result 取得已驗證的手機號碼）
-            verified_phone = user.phone_number
-            
-            user.phone_verified = True
-            user.verification_status = CustomUser.VerificationStatus.VERIFIED
-            user.otp_attempts = 0
-            user.save()
-            
-            logger.info(f"手機驗證成功：user={user.username}, phone={verified_phone}")
-            
+        if user.verification_status == CustomUser.VerificationStatus.LOCKED:
             return Response(
                 {
-                    'status': 'VERIFIED',
-                    'phone_number': verified_phone,
-                    'message': '手機號碼驗證成功'
+                    'status': 'LOCKED',
+                    'message': '驗證失敗次數過多，請重新發送驗證碼'
                 },
-                status=status.HTTP_200_OK
+                status=status.HTTP_403_FORBIDDEN
             )
         else:
-            user.increment_otp_attempts()
-            remaining = 3 - user.otp_attempts
-            
-            if user.verification_status == CustomUser.VerificationStatus.LOCKED:
-                return Response(
-                    {
-                        'status': 'LOCKED',
-                        'message': '驗證失敗次數過多，請重新發送驗證碼'
-                    },
-                    status=status.HTTP_403_FORBIDDEN
-                )
-            else:
-                return Response(
-                    {
-                        'status': 'INVALID_OTP',
-                        'remaining_attempts': remaining,
-                        'message': f'驗證碼錯誤，您還有 {remaining} 次機會'
-                    },
-                    status=status.HTTP_400_BAD_REQUEST
-                )
+            return Response(
+                {
+                    'status': 'INVALID_OTP',
+                    'remaining_attempts': remaining,
+                    'message': f'驗證碼錯誤，您還有 {remaining} 次機會'
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
 
 @api_view(['POST'])

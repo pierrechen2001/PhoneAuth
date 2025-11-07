@@ -82,7 +82,7 @@ PhoneOath/
 **特點**:
 - 使用 RegexValidator 驗證格式
 - 詳細的 help_text 說明（自動生成 API 文件）
-- 支援多種驗證方式（id_token 或 verification_id+otp_code）
+- 驗證方式：verification_id + 6 位 otp_code
 
 ### 3. views.py - API 視圖
 
@@ -108,17 +108,15 @@ PhoneOath/
 
 **FirebaseAuthService 類別**（單例模式）:
 - `send_otp()`: 發送 OTP（實際在前端完成）
-- `verify_otp()`: 驗證 OTP（實際在前端完成）
-- `verify_id_token()`: 驗證 Firebase ID Token（建議使用）
+- `verify_otp()`: 驗證 6 位 OTP
 - `get_user_by_phone()`: 根據手機查詢使用者
 
 **重要說明**:
 - Firebase Admin SDK 不直接支援發送 SMS
 - 實際 OTP 發送需在前端使用 Firebase JS SDK
 - 後端主要負責：
-  1. 驗證 ID Token
-  2. 取得已驗證的手機號碼
-  3. 更新使用者資料
+  1. 驗證 6 位 OTP（或與前端確認 verification_id 流程）
+  2. 更新使用者資料
 
 ### 5. admin.py - Django Admin
 
@@ -148,12 +146,9 @@ PhoneOath/
 │    confirmationResult     │                          │   返回 user
 │    .confirm(code)         │                          │
 │                           │                          │
-├─ 6. 取得 ID Token         │                          │
-│    user.getIdToken()      │                          │
-│                           │                          │
-├─ 7. 呼叫 /verify-otp/    ─┼→ 驗證 ID Token ─────────┼→ auth.verify_id_token()
-│    傳送 id_token          │   取得手機號碼           │   返回 decoded_token
-│                           │   更新使用者資料          │
+├─ 6. 呼叫 /verify-otp/    ─┼→ 驗證 6 位 OTP ─────────┼→ 後端驗證 OTP
+│    傳送 verification_id   │   更新使用者資料          │   返回驗證結果
+│    與 otp_code            │                          │
 │                           │   phone_verified = True  │
 │                           │   回傳成功               │
 │                           │                          │
@@ -186,7 +181,7 @@ PhoneOath/
 - 重新發送 OTP 後重置
 
 ### 5. Firebase Token 驗證
-- 使用 Firebase Admin SDK 驗證 ID Token
+- 以 6 位 OTP 驗證為主（verification_id + otp_code）
 - 防止偽造 Token
 - 確保手機號碼已由 Firebase 驗證
 
@@ -206,9 +201,7 @@ PhoneOath/
 - 方便測試與 mock
 
 ### 3. 策略模式
-- 支援兩種驗證策略：
-  - ID Token 驗證（建議）
-  - Verification ID + OTP 驗證（傳統）
+- 本專案採單一路徑：Verification ID + 6 位 OTP 驗證
 
 ### 4. Repository 模式（可擴展）
 - Models 作為 data layer

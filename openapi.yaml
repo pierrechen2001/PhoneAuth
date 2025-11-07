@@ -20,9 +20,9 @@ info:
     2. 呼叫 `/send-otp/` API（後端記錄狀態）
     3. 前端使用 Firebase JS SDK 發送 OTP
     4. 使用者收到 SMS，輸入驗證碼
-    5. 前端使用 Firebase JS SDK 驗證 OTP，取得 ID Token
-    6. 呼叫 `/verify-otp/` API，傳入 ID Token
-    7. 後端驗證 Token，更新使用者資料
+    5. 使用者輸入 6 位 OTP
+    6. 呼叫 `/verify-otp/` API，傳入 verification_id 與 otp_code
+    7. 後端驗證 OTP，更新使用者資料
     
     ## 錯誤處理
     
@@ -135,11 +135,7 @@ paths:
         - phone-auth
       summary: 驗證 OTP 代碼
       description: |
-        驗證使用者輸入的 OTP 代碼。
-        
-        支援兩種驗證方式：
-        1. **使用 ID Token（建議）**: 前端完成 Firebase 驗證後，將 ID Token 傳給後端
-        2. **使用 verification_id + otp_code（傳統）**: 直接傳送驗證資訊
+        驗證使用者輸入的 6 位 OTP 代碼（僅支援 verification_id + otp_code）。
         
         **錯誤次數限制**: 每個 session 最多錯誤 3 次，達到上限會被鎖定
       operationId: verifyOTP
@@ -152,31 +148,20 @@ paths:
         content:
           application/json:
             schema:
-              oneOf:
-                - type: object
-                  title: 使用 ID Token（建議）
-                  required:
-                    - id_token
-                  properties:
-                    id_token:
-                      type: string
-                      description: Firebase ID Token
-                      example: "eyJhbGciOiJSUzI1NiIs..."
-                - type: object
-                  title: 使用 verification_id + otp_code
-                  required:
-                    - verification_id
-                    - otp_code
-                  properties:
-                    verification_id:
-                      type: string
-                      description: Firebase verification session ID
-                      example: "xxxxxx"
-                    otp_code:
-                      type: string
-                      description: 使用者輸入的驗證碼（4-6 位數字）
-                      example: "123456"
-                      pattern: '^\d{4,6}$'
+              type: object
+              required:
+                - verification_id
+                - otp_code
+              properties:
+                verification_id:
+                  type: string
+                  description: Firebase verification session ID
+                  example: "xxxxxx"
+                otp_code:
+                  type: string
+                  description: 使用者輸入的驗證碼（6 位數字）
+                  example: "123456"
+                  pattern: '^\d{6}$'
       responses:
         '200':
           description: 驗證成功

@@ -25,14 +25,15 @@ curl -X POST http://127.0.0.1:8000/auth/phone/send-otp/ \
   }'
 ```
 
-### 2. 驗證 OTP（使用 ID Token）
+### 2. 驗證 OTP（6 位數）
 
 ```bash
 curl -X POST http://127.0.0.1:8000/auth/phone/verify-otp/ \
   -H "Content-Type: application/json" \
   -H "Authorization: Token YOUR_AUTH_TOKEN" \
   -d '{
-    "id_token": "eyJhbGciOiJSUzI1NiIs..."
+    "verification_id": "xxxxxx",
+    "otp_code": "123456"
   }'
 ```
 
@@ -71,12 +72,13 @@ response = requests.post(
 )
 print("發送 OTP 回應：", response.json())
 
-# 2. 驗證 OTP
+# 2. 驗證 OTP（6 位）
 response = requests.post(
     f"{BASE_URL}/auth/phone/verify-otp/",
     headers=HEADERS,
     json={
-        "id_token": "eyJhbGciOiJSUzI1NiIs..."
+        "verification_id": "xxxxxx",
+        "otp_code": "123456"
     }
 )
 print("驗證 OTP 回應：", response.json())
@@ -117,7 +119,7 @@ print("重新發送 OTP 回應：", response.json())
      }
      ```
 
-2. **驗證 OTP**
+2. **驗證 OTP（6 位）**
    - Method: `POST`
    - URL: `{{base_url}}/auth/phone/verify-otp/`
    - Headers:
@@ -126,7 +128,8 @@ print("重新發送 OTP 回應：", response.json())
    - Body (raw JSON):
      ```json
      {
-       "id_token": "eyJhbGciOiJSUzI1NiIs..."
+       "verification_id": "xxxxxx",
+       "otp_code": "123456"
      }
      ```
 

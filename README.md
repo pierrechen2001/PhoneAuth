@@ -216,7 +216,7 @@ Authorization: Token your-auth-token
 
 **說明**: 驗證使用者輸入的 OTP 代碼。
 
-#### 方法一：使用 verification_id + otp_code（傳統方式）
+#### 使用 verification_id + otp_code（唯一方式）
 
 **Request Body**:
 ```json
@@ -226,21 +226,12 @@ Authorization: Token your-auth-token
 }
 ```
 
-#### 方法二：使用 Firebase ID Token（建議）
-
-**Request Body**:
-```json
-{
-  "id_token": "eyJhbGciOiJSUzI1NiIs..."
-}
-```
 
 **參數說明**:
 | 參數 | 類型 | 必填 | 說明 |
 |------|------|------|------|
-| verification_id | string | 方法一必填 | Firebase 返回的驗證 session ID |
-| otp_code | string | 方法一必填 | 使用者輸入的驗證碼（4-6 位數字） |
-| id_token | string | 方法二必填 | Firebase ID Token（建議使用） |
+| verification_id | string | ✅ | Firebase 返回的驗證 session ID |
+| otp_code | string | ✅ | 使用者輸入的驗證碼（6 位數字） |
 
 **Response (驗證成功)**:
 ```json
@@ -475,28 +466,27 @@ const code = '123456';  // 使用者輸入的驗證碼
 
 window.confirmationResult.confirm(code)
   .then((result) => {
-    // 驗證成功，取得 ID Token
+    // 驗證成功（前端），準備呼叫後端完成綁定
     const user = result.user;
     
-    user.getIdToken().then((idToken) => {
-      // 將 ID Token 傳給後端
-      fetch('/auth/phone/verify-otp/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Token your-auth-token'
-        },
-        body: JSON.stringify({
-          id_token: idToken
-        })
+    // 直接將 verificationId 與 6 位 OTP 傳給後端
+    fetch('/auth/phone/verify-otp/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Token your-auth-token'
+      },
+      body: JSON.stringify({
+        verification_id: window.confirmationResult.verificationId,
+        otp_code: code
       })
-      .then(response => response.json())
-      .then(data => {
-        if (data.status === 'VERIFIED') {
-          console.log('Phone verification successful!');
-          // 顯示成功訊息，導向下一頁
-        }
-      });
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.status === 'VERIFIED') {
+        console.log('Phone verification successful!');
+        // 顯示成功訊息，導向下一頁
+      }
     });
   })
   .catch((error) => {
@@ -564,16 +554,18 @@ function PhoneVerification() {
   const verifyOTP = async () => {
     try {
       const result = await confirmationResult.confirm(otp);
-      const idToken = await result.user.getIdToken();
-      
-      // 傳給後端驗證
+
+      // 傳給後端驗證（verification_id + 6 位 OTP）
       const response = await fetch('/auth/phone/verify-otp/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Token your-auth-token'
         },
-        body: JSON.stringify({ id_token: idToken })
+        body: JSON.stringify({
+          verification_id: confirmationResult.verificationId,
+          otp_code: otp
+        })
       });
       
       const data = await response.json();

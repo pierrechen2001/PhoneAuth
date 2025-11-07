@@ -11,7 +11,7 @@
 
 2. **手機驗證 API**
    - ✅ POST `/auth/phone/send-otp/` - 發送 OTP
-   - ✅ POST `/auth/phone/verify-otp/` - 驗證 OTP
+   - ✅ POST `/auth/phone/verify-otp/` - 驗證 6 位 OTP
    - ✅ POST `/auth/phone/resend-otp/` - 重新發送 OTP
 
 3. **資料模型**
@@ -21,7 +21,7 @@
 
 4. **Firebase 整合**
    - ✅ Firebase Admin SDK 初始化
-   - ✅ ID Token 驗證
+   - ✅ 6 位 OTP 驗證流程（verification_id + otp_code）
    - ✅ 手機號碼查詢功能
 
 5. **安全機制**
@@ -99,7 +99,7 @@ PhoneOath/
 
 ### 1. 完整的驗證流程
 - 發送 OTP
-- 驗證 OTP
+- 驗證 6 位 OTP（verification_id + otp_code）
 - 重新發送 OTP
 - 錯誤處理與重試機制
 
@@ -366,7 +366,7 @@ python manage.py migrate
 6. 整合監控服務（Sentry）
 
 ### 前端整合
-1. 優先使用 ID Token 驗證方式（安全性更高）
+1. 僅使用 6 位 OTP 驗證（verification_id + otp_code）
 2. 實作 60 秒倒數計時器
 3. 顯示剩餘嘗試次數
 4. 提供清楚的錯誤訊息

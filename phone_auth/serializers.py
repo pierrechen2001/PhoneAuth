@@ -93,55 +93,31 @@ class VerifyOTPSerializer(serializers.Serializer):
     
     API Endpoint: POST /auth/phone/verify-otp/
     
-    方法一：使用 verification_id + otp_code（傳統方式）
+    使用 verification_id + otp_code（固定 6 位 OTP）
     {
         "verification_id": "xxxxxx",
         "otp_code": "123456"
     }
     
-    方法二：使用 Firebase ID Token（建議方式）
-    {
-        "id_token": "eyJhbGciOiJSUzI1NiIs..."
-    }
     """
     
     verification_id = serializers.CharField(
-        required=False,
+        required=True,
         help_text='Firebase verification session ID（方法一使用）'
     )
     
     otp_code = serializers.CharField(
         max_length=6,
-        required=False,
-        help_text='使用者輸入的驗證碼（4-6 位數字，方法一使用）',
+        required=True,
+        help_text='使用者輸入的驗證碼（6 位數字）',
         validators=[
             RegexValidator(
-                regex=r'^\d{4,6}$',
-                message='驗證碼格式錯誤，應為 4-6 位數字'
+                regex=r'^\d{6}$',
+                message='驗證碼格式錯誤，應為 6 位數字'
             )
         ]
     )
     
-    id_token = serializers.CharField(
-        required=False,
-        help_text='Firebase ID Token（方法二使用，建議）'
-    )
-    
-    def validate(self, data):
-        """
-        驗證必須提供其中一種驗證方式
-        """
-        has_method1 = 'verification_id' in data and 'otp_code' in data
-        has_method2 = 'id_token' in data
-        
-        if not (has_method1 or has_method2):
-            raise serializers.ValidationError(
-                '請提供驗證方式：'
-                '方法一：verification_id + otp_code，'
-                '方法二：id_token（建議）'
-            )
-        
-        return data
 
 
 class VerifyOTPResponseSerializer(serializers.Serializer):

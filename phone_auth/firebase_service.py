@@ -114,14 +114,11 @@ class FirebaseAuthService:
         """
         驗證 OTP 代碼
         
-        注意：實際驗證也是在前端完成。
-        後端的角色是：
-        1. 接收前端驗證成功後的 ID token
-        2. 使用 auth.verify_id_token() 驗證 token
-        3. 從 token 中取得已驗證的手機號碼
+        注意：本專案採用 6 位 OTP（verification_id + otp_code）為唯一流程。
+        若在你的架構中需與 Firebase 前端驗證整合，請依實際需求調整此方法實作。
         
         Args:
-            verification_id: Firebase 返回的驗證 session ID（或 ID token）
+            verification_id: Firebase 返回的驗證 session ID
             otp_code: 使用者輸入的驗證碼
         
         Returns:
@@ -133,91 +130,17 @@ class FirebaseAuthService:
             }
         """
         try:
-            # 在實際實作中，這裡應該驗證前端傳來的 ID token
-            # decoded_token = auth.verify_id_token(id_token)
-            # phone_number = decoded_token.get('phone_number')
-            
             # 這裡提供一個簡化的實作範例
             logger.info(f"驗證 OTP：verification_id={verification_id}, code={otp_code}")
             
-            # 模擬驗證（實際應驗證 ID token）
-            # 實際使用時，請將此部分替換為真實的 token 驗證
+            # 模擬驗證（實際應對接你的 OTP 驗證機制）
             
             return {
                 'success': True,
-                'message': '此為模擬實作，實際應使用 auth.verify_id_token() 驗證前端傳來的 ID token'
-            }
-            
-        except auth.InvalidIdTokenError:
-            logger.error("無效的 ID token")
-            return {
-                'success': False,
-                'error': '驗證碼無效或已過期'
+                'message': '此為模擬實作，請替換為實際的 OTP 驗證邏輯'
             }
         except Exception as e:
             logger.error(f"驗證 OTP 時發生錯誤：{str(e)}")
-            return {
-                'success': False,
-                'error': str(e)
-            }
-    
-    def verify_id_token(self, id_token: str) -> dict:
-        """
-        驗證 Firebase ID Token（推薦使用此方法）
-        
-        這是建議的驗證流程：
-        1. 前端使用 Firebase JS SDK 完成手機號碼驗證
-        2. 前端取得 user.getIdToken()
-        3. 前端將 ID token 傳給後端
-        4. 後端使用此方法驗證 token 並取得已驗證的手機號碼
-        
-        Args:
-            id_token: 前端 Firebase Auth 提供的 ID token
-        
-        Returns:
-            dict: {
-                'success': bool,
-                'phone_number': str (如果成功),
-                'uid': str (Firebase user ID),
-                'error': str (如果失敗)
-            }
-        """
-        try:
-            # 驗證 ID token
-            decoded_token = auth.verify_id_token(id_token)
-            
-            # 取得手機號碼（必須已驗證）
-            phone_number = decoded_token.get('phone_number')
-            uid = decoded_token.get('uid')
-            
-            if not phone_number:
-                return {
-                    'success': False,
-                    'error': '此 token 沒有關聯的手機號碼'
-                }
-            
-            logger.info(f"ID Token 驗證成功：uid={uid}, phone={phone_number}")
-            
-            return {
-                'success': True,
-                'phone_number': phone_number,
-                'uid': uid
-            }
-            
-        except auth.InvalidIdTokenError as e:
-            logger.error(f"無效的 ID token：{str(e)}")
-            return {
-                'success': False,
-                'error': '無效的驗證 token'
-            }
-        except auth.ExpiredIdTokenError:
-            logger.error("ID token 已過期")
-            return {
-                'success': False,
-                'error': '驗證 token 已過期，請重新登入'
-            }
-        except Exception as e:
-            logger.error(f"驗證 ID token 時發生錯誤：{str(e)}")
             return {
                 'success': False,
                 'error': str(e)
