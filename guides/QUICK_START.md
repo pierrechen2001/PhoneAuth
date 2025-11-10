@@ -72,7 +72,23 @@ python manage.py runserver
 ### 方法 1：使用瀏覽器（最簡單）
 
 1. 開啟 http://127.0.0.1:8000/api/docs/
-2. 點擊 **Authorize** 按鈕，登入
+2. 點擊 **Authorize** 按鈕，選擇認證方式：
+
+   **方式 A：Basic Authentication（推薦）**
+   - 選擇 `basicAuth (http, Basic)`
+   - 輸入 **Username**：您建立的使用者名稱（例如：`test_pierre`）
+   - 輸入 **Password**：您的密碼
+   - 點擊 **Authorize** 按鈕
+   - 點擊 **Close** 關閉視窗
+
+   **方式 B：Session Cookie（需先登入 Django Admin）**
+   - 先前往 http://127.0.0.1:8000/admin/ 並登入
+   - 回到 API 文件頁面，選擇 `cookieAuth (apiKey)`
+   - 在 **Value** 欄位輸入您的 `sessionid` cookie 值
+     - 可在瀏覽器開發者工具（F12）→ Application → Cookies 中找到
+   - 點擊 **Authorize** 按鈕
+   - 點擊 **Close** 關閉視窗
+
 3. 展開 API 端點，點擊 **Try it out**
 4. 輸入測試資料，點擊 **Execute**
 

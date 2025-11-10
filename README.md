@@ -156,6 +156,15 @@ python manage.py runserver
 - **ReDoc**: http://127.0.0.1:8000/api/redoc/
 - **OpenAPI Schema**: http://127.0.0.1:8000/api/schema/
 
+**在 Swagger UI 中登入：**
+1. 點擊右上角的 **Authorize** 按鈕
+2. 選擇 **basicAuth (http, Basic)**
+3. 輸入：
+   - **Username**：您建立的使用者名稱（例如：`test_pierre`）
+   - **Password**：您的密碼
+4. 點擊 **Authorize** → **Close**
+5. 現在可以測試 API 端點了
+
 ---
 
 ## 📡 API 端點說明

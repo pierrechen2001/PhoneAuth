@@ -45,8 +45,8 @@ import sys
 
 # ===== 設定 =====
 BASE_URL = "http://127.0.0.1:8000"
-USERNAME = "testuser"  # 替換為你的使用者名稱
-PASSWORD = "testpass"  # 替換為你的密碼
+USERNAME = "test"  # 預設的 superuser 使用者名稱
+PASSWORD = "testtest123123"  # 預設密碼
 
 # 測試手機號碼（建議使用 Firebase 測試號碼）
 COUNTRY_CODE = "+886"
