@@ -2,7 +2,7 @@
 API 測試工具（API Testing Tool）
 
 【用途說明】
-這不是前端程式，而是一個專門用於測試手機驗證 API 的測試工具。
+這是一個專門用於測試手機驗證 API 的測試工具。
 它會直接呼叫後端 API 端點，模擬前端發送請求的行為，用來驗證 API 是否正常運作。
 
 【主要功能】
@@ -710,7 +710,7 @@ def main():
     print()
     print_info("5. 完整文件：")
     print_info("   - README.md: 完整使用說明")
-    print_info("   - API_TESTING_GUIDE.md: API 測試指南")
+    print_info("   - guides/API_TESTING_GUIDE.md: API 測試指南")
     print_info("   - API 文件: http://127.0.0.1:8000/api/docs/")
     print()
     

@@ -45,10 +45,10 @@
 
 1. **使用說明**
    - ✅ README.md - 完整使用說明（含前端整合範例）
-   - ✅ QUICK_START.md - 10 分鐘快速開始指南
-   - ✅ API_TESTING_GUIDE.md - API 測試指南
-   - ✅ DEPLOYMENT_GUIDE.md - 生產環境部署指南
-   - ✅ PROJECT_OVERVIEW.md - 專案架構與技術細節
+   - ✅ guides/QUICK_START.md - 10 分鐘快速開始指南
+   - ✅ guides/API_TESTING_GUIDE.md - API 測試指南
+   - ✅ guides/DEPLOYMENT_GUIDE.md - 生產環境部署指南
+   - ✅ guides/PROJECT_OVERVIEW.md - 專案架構與技術細節
 
 2. **設定檔**
    - ✅ requirements.txt - Python 依賴套件
@@ -65,11 +65,12 @@
 ```
 PhoneOath/
 ├── 📄 README.md                    # 主要使用說明（必讀）
-├── 📄 QUICK_START.md              # 快速開始指南
-├── 📄 API_TESTING_GUIDE.md        # API 測試指南
-├── 📄 DEPLOYMENT_GUIDE.md         # 部署指南
-├── 📄 PROJECT_OVERVIEW.md         # 專案概覽
-├── 📄 COMPLETION_SUMMARY.md       # 本文件
+├── 📁 guides/                      # 操作說明與指南文件
+│   ├── QUICK_START.md              # 快速開始指南
+│   ├── API_TESTING_GUIDE.md        # API 測試指南
+│   ├── DEPLOYMENT_GUIDE.md         # 部署指南
+│   ├── PROJECT_OVERVIEW.md         # 專案概覽
+│   └── COMPLETION_SUMMARY.md       # 本文件
 ├── 📄 api_spec.md                 # 原始 API 規格
 │
 ├── 📄 requirements.txt            # Python 依賴

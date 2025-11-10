@@ -40,10 +40,12 @@ PhoneOath/
 ├── openapi.yaml                     # OpenAPI 規格檔案
 │
 ├── README.md                        # 完整使用說明
-├── QUICK_START.md                  # 快速開始指南
-├── API_TESTING_GUIDE.md            # API 測試指南
-├── DEPLOYMENT_GUIDE.md             # 部署指南
-├── PROJECT_OVERVIEW.md             # 本文件
+├── guides/                          # 操作說明與指南文件
+│   ├── QUICK_START.md               # 快速開始指南
+│   ├── API_TESTING_GUIDE.md         # API 測試指南
+│   ├── DEPLOYMENT_GUIDE.md          # 部署指南
+│   ├── PROJECT_OVERVIEW.md          # 本文件
+│   └── COMPLETION_SUMMARY.md        # 專案完成總結
 ├── api_spec.md                     # 原始 API 規格
 └── example_test.py                 # Python 測試範例
 ```

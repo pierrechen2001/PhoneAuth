@@ -64,8 +64,12 @@ PhoneOath/
 ├── requirements.txt            # Python 套件依賴
 ├── example_test.py             # Python 測試腳本
 ├── api_spec.md                 # API 規格說明
-├── API_TESTING_GUIDE.md        # API 測試說明指南
-├── DEPLOYMENT_GUIDE.md         # 部署說明指南
+├── guides/                     # 操作說明與指南文件
+│   ├── API_TESTING_GUIDE.md    # API 測試說明指南
+│   ├── COMPLETION_SUMMARY.md   # 專案完成總結
+│   ├── DEPLOYMENT_GUIDE.md     # 部署說明指南
+│   ├── PROJECT_OVERVIEW.md     # 專案概覽與架構說明
+│   └── QUICK_START.md          # 快速開始指南
 └── README.md                   # 本文件（完整使用說明）
 ```
 
@@ -95,7 +99,14 @@ pip install -r requirements.txt
 1. 前往 [Firebase Console](https://console.firebase.google.com/)
 2. 選擇你的專案（或建立新專案）
 3. 前往 **Authentication** → **Sign-in method**
-4. 啟用 **Phone** 認證方式
+4. 找到 **電話業者（Phone）**，點擊並切換為啟用狀態
+   - 勾選畫面中的 **啟用**，如同下方示意截圖所示
+   - 如果要在 Android 上使用，記得補上發佈版的 SHA-1 指紋
+5. 在同一個畫面可新增「測試用電話號碼」，避免發送真實簡訊
+   - 本專案預設使用 `+886912345678` 搭配驗證碼 `123456`
+   - 若尚未提供 Android 發佈版 SHA-1（例如目前停用狀態），仍可在該欄位保留測試號碼，待日後補齊即可
+
+> 建議在 README 中保留這些設定截圖或說明，方便其他同仁快速對照 Firebase Console 的「電話業者」介面。
 
 #### 2.2 下載 Service Account 金鑰
 

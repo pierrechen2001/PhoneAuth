@@ -25,6 +25,9 @@ pip install -r requirements.txt
    - Project Settings → Service accounts → Generate new private key
    - 下載 JSON，重新命名為 `firebase-service-account.json`
    - 放在專案根目錄
+5. **設定測試用電話號碼（可選）**：
+   - 本專案預設組合：`+886912345678` 搭配驗證碼 `123456`
+   - 若尚未提供 Android 發佈版 SHA-1，Firebase 會顯示停用，但仍可先保留這組測試資料，待之後補齊設定後再啟用
 
 ### 步驟 3：環境設定 (1 分鐘)
 
@@ -93,8 +96,8 @@ curl -X POST http://127.0.0.1:8000/auth/phone/send-otp/ \
 
 1. 前往 Firebase Console
 2. Authentication → Sign-in method → Phone → Phone numbers for testing
-3. 新增測試號碼，例如：
-   - Phone number: `+886987654321`
+3. 新增測試號碼，例如（本專案預設）：
+   - Phone number: `+886912345678`
    - Code: `123456`
 4. 使用這個號碼測試，不會真的發送 SMS
 
@@ -194,7 +197,7 @@ python manage.py migrate
 ## 🎓 下一步學習
 
 1. **閱讀完整文件**: 
-   - [README.md](README.md) - 完整說明
+   - [README.md](../README.md) - 完整說明
    - [API_TESTING_GUIDE.md](API_TESTING_GUIDE.md) - 測試指南
    - [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) - 部署指南
 
@@ -246,10 +249,10 @@ python test_api.py
 
 ## 📞 需要幫助？
 
-- **完整文件**: [README.md](README.md)
+- **完整文件**: [README.md](../README.md)
 - **API 測試**: [API_TESTING_GUIDE.md](API_TESTING_GUIDE.md)
 - **部署說明**: [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)
-- **API 規格**: [api_spec.md](api_spec.md)
+- **API 規格**: [api_spec.md](../api_spec.md)
 
 ---
 
