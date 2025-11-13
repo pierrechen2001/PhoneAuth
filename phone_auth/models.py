@@ -8,8 +8,9 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import RegexValidator
+import uuid
 
-
+# 為手機驗證而新增的 user data DB 欄位
 class CustomUser(AbstractUser):
     """
     擴展 Django 原生 User Model，新增手機驗證相關欄位
@@ -80,6 +81,101 @@ class CustomUser(AbstractUser):
         null=True,
         verbose_name='最後發送時間',
         help_text='最後一次發送 OTP 的時間戳記'
+    )
+    
+    # ============================================================
+    # User Profile 相關欄位
+    # ============================================================
+    
+    nickname = models.CharField(
+        max_length=150,
+        blank=True,
+        null=True,
+        verbose_name='暱稱',
+        help_text='使用者暱稱'
+    )
+    
+    gender = models.CharField(
+        max_length=1,
+        blank=True,
+        null=True,
+        verbose_name='性別',
+        help_text='使用者性別'
+    )
+    
+    age = models.CharField(
+        max_length=10,
+        blank=True,
+        null=True,
+        verbose_name='年齡',
+        help_text='使用者年齡'
+    )
+    
+    degree = models.CharField(
+        max_length=20,
+        blank=True,
+        null=True,
+        verbose_name='學歷',
+        help_text='使用者學歷'
+    )
+    
+    counseling_record = models.IntegerField(
+        default=0,
+        verbose_name='諮商記錄數',
+        help_text='諮商記錄數量'
+    )
+    
+    motivation_1 = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True,
+        verbose_name='動機1',
+        help_text='使用者動機1'
+    )
+    
+    motivation_2 = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True,
+        verbose_name='動機2',
+        help_text='使用者動機2'
+    )
+    
+    motivation_3 = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True,
+        verbose_name='動機3',
+        help_text='使用者動機3'
+    )
+    
+    on_stage = models.CharField(
+        max_length=20,
+        blank=True,
+        null=True,
+        verbose_name='上線狀態',
+        help_text='使用者上線狀態'
+    )
+    
+    status = models.CharField(
+        max_length=20,
+        blank=True,
+        null=True,
+        verbose_name='狀態',
+        help_text='使用者狀態'
+    )
+    
+    retry_time = models.DateTimeField(
+        blank=True,
+        null=True,
+        verbose_name='重試時間',
+        help_text='重試時間戳記'
+    )
+    
+    monkey_try = models.IntegerField(
+        default=0,
+        verbose_name='Monkey 嘗試次數',
+        help_text='Monkey 嘗試次數'
     )
     
     class Meta:

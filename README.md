@@ -52,7 +52,7 @@ PhoneOath/
 │
 ├── phone_auth/                 # 手機驗證模組（可獨立複製）
 │   ├── __init__.py
-│   ├── models.py               # 資料模型（CustomUser Model + OTPVerificationLog）
+│   ├── models.py               # 資料模型（CustomUser Model + UserProfile + OTPVerificationLog）
 │   ├── serializers.py          # API 序列化器（輸入/輸出格式定義）
 │   ├── views.py                # API 視圖（3 個 API 端點完整實作）
 │   ├── urls.py                 # 路由模組設定
