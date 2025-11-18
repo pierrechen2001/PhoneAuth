@@ -178,6 +178,33 @@ class CustomUser(AbstractUser):
         help_text='Monkey 嘗試次數'
     )
     
+    # ============================================================
+    # 頭像相關欄位
+    # ============================================================
+    
+    avatar = models.ImageField(
+        upload_to='avatars/%Y/%m/%d/',
+        blank=True,
+        null=True,
+        verbose_name='個人照片',
+        help_text='使用者的個人頭像'
+    )
+    
+    avatar_url = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True,
+        verbose_name='頭像 URL',
+        help_text='個人照片的 URL 路徑'
+    )
+    
+    avatar_uploaded_at = models.DateTimeField(
+        blank=True,
+        null=True,
+        verbose_name='頭像上傳時間',
+        help_text='最後一次上傳頭像的時間'
+    )
+    
     class Meta:
         verbose_name = '使用者'
         verbose_name_plural = '使用者列表'

@@ -6,6 +6,8 @@
 
 from django.contrib import admin
 from django.urls import path, include
+from django.conf import settings
+from django.conf.urls.static import static
 from drf_spectacular.views import (
     SpectacularAPIView,
     SpectacularRedocView,
@@ -19,6 +21,9 @@ urlpatterns = [
     # 手機驗證 API
     path('auth/phone/', include('phone_auth.urls')),
     
+    # 個人資料編輯 API
+    path('api/user/', include('edit_profile.urls')),
+    
     # OpenAPI Schema (JSON/YAML)
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
     
@@ -28,4 +33,8 @@ urlpatterns = [
     # ReDoc (替代的 API 文件介面)
     path('api/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
 ]
+
+# 提供媒體檔案（開發環境）
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

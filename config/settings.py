@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     
     # Local apps
     'phone_auth',  # 手機驗證模組
+    'edit_profile',  # 個人資料編輯模組
 ]
 
 MIDDLEWARE = [
@@ -121,6 +122,12 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
 STATIC_URL = 'static/'
+
+# Media files (User uploads)
+# https://docs.djangoproject.com/en/4.2/howto/static-files/
+
+MEDIA_URL = 'media/'
+MEDIA_ROOT = BASE_DIR / 'media'
 
 
 # Default primary key field type
