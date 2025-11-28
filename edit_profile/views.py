@@ -11,12 +11,7 @@ from rest_framework.response import Response
 from django.utils import timezone
 import logging
 
-from .serializers import (
-    UpdateProfileSerializer,
-    ProfileResponseSerializer,
-    AvatarUploadSerializer,
-    AvatarResponseSerializer
-)
+from .models import UserProfile
 from phone_auth.models import CustomUser
 
 logger = logging.getLogger(__name__)
@@ -46,7 +41,7 @@ def update_profile(request):
         "success": true,
         "message": "個人資料更新成功",
         "data": {
-            "id": 1,
+            "id": "uuid",
             "username": "pierre",
             "email": "pierre@example.com",
             "nickname": "Pierre",
@@ -57,16 +52,9 @@ def update_profile(request):
             "motivation_2": "成長",
             "motivation_3": "學習",
             "phone_number": "+886987654321",
-            "phone_verified": true
+            "phone_verified": true,
+            "avatar_url": null
         }
-    }
-    
-    Response (Error):
-    {
-        "success": false,
-        "error": "VALIDATION_ERROR",
-        "message": "驗證錯誤",
-        "details": {...}
     }
     """
     
@@ -88,45 +76,18 @@ def update_profile(request):
     user = request.user
     
     try:
-        # 只更新有提供的欄位
-        if 'nickname' in validated_data:
-            user.nickname = validated_data['nickname']
+        # 獲取或建立 UserProfile
+        profile, created = UserProfile.objects.get_or_create(user=user)
         
-        if 'gender' in validated_data:
-            user.gender = validated_data['gender']
+        # 更新欄位
+        for field, value in validated_data.items():
+            if value is not None:
+                setattr(profile, field, value)
         
-        if 'age' in validated_data:
-            user.age = validated_data['age']
+        profile.save()
         
-        if 'degree' in validated_data:
-            user.degree = validated_data['degree']
-        
-        if 'motivation_1' in validated_data:
-            user.motivation_1 = validated_data['motivation_1']
-        
-        if 'motivation_2' in validated_data:
-            user.motivation_2 = validated_data['motivation_2']
-        
-        if 'motivation_3' in validated_data:
-            user.motivation_3 = validated_data['motivation_3']
-        
-        user.save()
-        
-        # 構建回應數據
-        response_data = {
-            'id': user.id,
-            'username': user.username,
-            'email': user.email,
-            'nickname': user.nickname or '',
-            'gender': user.gender or '',
-            'age': user.age or '',
-            'degree': user.degree or '',
-            'motivation_1': user.motivation_1,
-            'motivation_2': user.motivation_2,
-            'motivation_3': user.motivation_3,
-            'phone_number': user.phone_number or '',
-            'phone_verified': user.phone_verified
-        }
+        # 使用 Serializer 構建回應
+        response_serializer = ProfileResponseSerializer(profile)
         
         logger.info(f"使用者 {user.username} 個人資料更新成功")
         
@@ -134,7 +95,7 @@ def update_profile(request):
             {
                 'success': True,
                 'message': '個人資料更新成功',
-                'data': response_data
+                'data': response_serializer.data
             },
             status=status.HTTP_200_OK
         )
@@ -158,46 +119,15 @@ def get_profile(request):
     獲取使用者個人資料
     
     API Endpoint: GET /api/user/profile/
-    
-    Response (Success):
-    {
-        "success": true,
-        "message": "個人資料獲取成功",
-        "data": {
-            "id": 1,
-            "username": "pierre",
-            "email": "pierre@example.com",
-            "nickname": "Pierre",
-            "gender": "M",
-            "age": "23",
-            "degree": "Bachelor",
-            "motivation_1": "助人",
-            "motivation_2": "成長",
-            "motivation_3": "學習",
-            "phone_number": "+886987654321",
-            "phone_verified": true
-        }
-    }
     """
     
     try:
         user = request.user
         
-        # 構建回應數據
-        response_data = {
-            'id': user.id,
-            'username': user.username,
-            'email': user.email,
-            'nickname': user.nickname or '',
-            'gender': user.gender or '',
-            'age': user.age or '',
-            'degree': user.degree or '',
-            'motivation_1': user.motivation_1,
-            'motivation_2': user.motivation_2,
-            'motivation_3': user.motivation_3,
-            'phone_number': user.phone_number or '',
-            'phone_verified': user.phone_verified
-        }
+        # 獲取或建立 UserProfile
+        profile, created = UserProfile.objects.get_or_create(user=user)
+        
+        response_serializer = ProfileResponseSerializer(profile)
         
         logger.info(f"使用者 {user.username} 獲取個人資料成功")
         
@@ -205,7 +135,7 @@ def get_profile(request):
             {
                 'success': True,
                 'message': '個人資料獲取成功',
-                'data': response_data
+                'data': response_serializer.data
             },
             status=status.HTTP_200_OK
         )
@@ -229,27 +159,6 @@ def upload_avatar(request):
     上傳使用者頭像
     
     API Endpoint: POST /api/user/avatar/upload/
-    
-    Request Body (Form-Data):
-    - avatar: 圖片文件
-    
-    Response (Success):
-    {
-        "success": true,
-        "message": "頭像上傳成功",
-        "data": {
-            "id": 1,
-            "avatar_url": "/media/avatars/2024/11/18/filename.jpg",
-            "avatar_uploaded_at": "2024-11-18T10:30:45Z"
-        }
-    }
-    
-    Response (Error):
-    {
-        "success": false,
-        "error": "INVALID_IMAGE",
-        "message": "無效的圖片文件"
-    }
     """
     
     # 驗證輸入資料
@@ -282,20 +191,20 @@ def upload_avatar(request):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        # 更新使用者頭像
-        user.avatar = avatar_file
-        user.avatar_uploaded_at = timezone.now()
-        user.save()
+        # 獲取或建立 UserProfile
+        profile, created = UserProfile.objects.get_or_create(user=user)
+        
+        # 更新頭像
+        profile.avatar = avatar_file
+        profile.avatar_uploaded_at = timezone.now()
+        profile.save()
         
         # 構建頭像 URL
-        avatar_url = request.build_absolute_uri(user.avatar.url) if user.avatar else None
+        avatar_url = request.build_absolute_uri(profile.avatar.url) if profile.avatar else None
+        profile.avatar_url = avatar_url  # 更新 DB 中的 avatar_url
+        profile.save(update_fields=['avatar_url'])
         
-        # 構建回應數據
-        response_data = {
-            'id': user.id,
-            'avatar_url': avatar_url,
-            'avatar_uploaded_at': user.avatar_uploaded_at
-        }
+        response_serializer = AvatarResponseSerializer(profile)
         
         logger.info(f"使用者 {user.username} 頭像上傳成功")
         
@@ -303,7 +212,7 @@ def upload_avatar(request):
             {
                 'success': True,
                 'message': '頭像上傳成功',
-                'data': response_data
+                'data': response_serializer.data
             },
             status=status.HTTP_200_OK
         )
@@ -327,23 +236,29 @@ def delete_avatar(request):
     刪除使用者頭像
     
     API Endpoint: DELETE /api/user/avatar/
-    
-    Response (Success):
-    {
-        "success": true,
-        "message": "頭像刪除成功"
-    }
     """
     
     try:
         user = request.user
         
-        # 刪除頭像檔案
-        if user.avatar:
-            user.avatar.delete()
+        try:
+            profile = user.profile
+        except UserProfile.DoesNotExist:
+            return Response(
+                {
+                    'success': True,
+                    'message': '頭像已刪除（無個人資料）'
+                },
+                status=status.HTTP_200_OK
+            )
         
-        user.avatar_uploaded_at = None
-        user.save()
+        # 刪除頭像檔案
+        if profile.avatar:
+            profile.avatar.delete()
+        
+        profile.avatar_uploaded_at = None
+        profile.avatar_url = None
+        profile.save()
         
         logger.info(f"使用者 {user.username} 頭像刪除成功")
         

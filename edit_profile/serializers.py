@@ -5,8 +5,7 @@
 """
 
 from rest_framework import serializers
-from phone_auth.models import CustomUser
-
+from .models import UserProfile
 
 class UpdateProfileSerializer(serializers.Serializer):
     """
@@ -75,15 +74,17 @@ class ProfileResponseSerializer(serializers.Serializer):
     用於序列化返回給前端的個人資料數據。
     """
     
-    id = serializers.IntegerField(
-        help_text='使用者 ID'
+    id = serializers.UUIDField(
+        help_text='Profile ID'
     )
     
     username = serializers.CharField(
+        source='user.username',
         help_text='使用者帳號'
     )
     
     email = serializers.EmailField(
+        source='user.email',
         help_text='使用者電郵'
     )
     
@@ -119,11 +120,18 @@ class ProfileResponseSerializer(serializers.Serializer):
     )
     
     phone_number = serializers.CharField(
+        source='user.phone_number',
         help_text='使用者手機號碼'
     )
     
     phone_verified = serializers.BooleanField(
+        source='user.phone_verified',
         help_text='手機是否已驗證'
+    )
+    
+    avatar_url = serializers.CharField(
+        allow_null=True,
+        help_text='頭像 URL'
     )
 
 
@@ -147,8 +155,8 @@ class AvatarResponseSerializer(serializers.Serializer):
     用於序列化返回給前端的頭像上傳結果。
     """
     
-    id = serializers.IntegerField(
-        help_text='使用者 ID'
+    id = serializers.UUIDField(
+        help_text='Profile ID'
     )
     
     avatar_url = serializers.CharField(
