@@ -12,9 +12,111 @@ from django.utils import timezone
 import logging
 
 from .models import UserProfile
+from .serializers import (
+    UpdateProfileSerializer,
+    ProfileResponseSerializer,
+    AvatarUploadSerializer,
+    AvatarResponseSerializer
+)
 from phone_auth.models import CustomUser
 
 logger = logging.getLogger(__name__)
+
+
+@api_view(['GET', 'PATCH'])
+@permission_classes([IsAuthenticated])
+def profile_view(request):
+    """
+    獲取或更新使用者個人資料
+    
+    GET: 獲取個人資料
+    PATCH: 更新個人資料
+    """
+    user = request.user
+    
+    if request.method == 'GET':
+        # 獲取個人資料
+        try:
+            # 獲取或建立 UserProfile
+            profile, created = UserProfile.objects.get_or_create(user=user)
+            
+            response_serializer = ProfileResponseSerializer(profile)
+            
+            logger.info(f"使用者 {user.username} 獲取個人資料成功")
+            
+            return Response(
+                {
+                    'success': True,
+                    'message': '個人資料獲取成功',
+                    'data': response_serializer.data
+                },
+                status=status.HTTP_200_OK
+            )
+        
+        except Exception as e:
+            logger.error(f"獲取使用者 {user.username} 個人資料時發生錯誤：{str(e)}")
+            return Response(
+                {
+                    'success': False,
+                    'error': 'GET_FAILED',
+                    'message': '獲取個人資料失敗'
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+    
+    elif request.method == 'PATCH':
+        # 更新個人資料
+        # 驗證輸入資料
+        serializer = UpdateProfileSerializer(data=request.data)
+        if not serializer.is_valid():
+            logger.warning(f"使用者 {user.username} 個人資料驗證失敗：{serializer.errors}")
+            return Response(
+                {
+                    'success': False,
+                    'error': 'VALIDATION_ERROR',
+                    'message': '驗證錯誤',
+                    'details': serializer.errors
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        validated_data = serializer.validated_data
+        
+        try:
+            # 獲取或建立 UserProfile
+            profile, created = UserProfile.objects.get_or_create(user=user)
+            
+            # 更新欄位
+            for field, value in validated_data.items():
+                if value is not None:
+                    setattr(profile, field, value)
+            
+            profile.save()
+            
+            # 使用 Serializer 構建回應
+            response_serializer = ProfileResponseSerializer(profile)
+            
+            logger.info(f"使用者 {user.username} 個人資料更新成功")
+            
+            return Response(
+                {
+                    'success': True,
+                    'message': '個人資料更新成功',
+                    'data': response_serializer.data
+                },
+                status=status.HTTP_200_OK
+            )
+        
+        except Exception as e:
+            logger.error(f"更新使用者 {user.username} 個人資料時發生錯誤：{str(e)}")
+            return Response(
+                {
+                    'success': False,
+                    'error': 'UPDATE_FAILED',
+                    'message': '更新個人資料失敗'
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 
 @api_view(['PATCH'])

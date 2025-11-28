@@ -68,4 +68,5 @@ class ProfileUpdateTest(TestCase):
         
         response = self.client.patch('/api/user/profile/', data, format='json')
         
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        # DRF 在未認證時返回 403 Forbidden 而不是 401 Unauthorized
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)

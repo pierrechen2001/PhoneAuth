@@ -121,6 +121,8 @@ class ProfileResponseSerializer(serializers.Serializer):
     
     phone_number = serializers.CharField(
         source='user.phone_number',
+        allow_null=True,
+        allow_blank=True,
         help_text='使用者手機號碼'
     )
     
@@ -131,6 +133,7 @@ class ProfileResponseSerializer(serializers.Serializer):
     
     avatar_url = serializers.CharField(
         allow_null=True,
+        allow_blank=True,
         help_text='頭像 URL'
     )
 

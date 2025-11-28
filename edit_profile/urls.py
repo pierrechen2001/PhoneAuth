@@ -10,11 +10,8 @@ from . import views
 app_name = 'edit_profile'
 
 urlpatterns = [
-    # 獲取個人資料
-    path('profile/', views.get_profile, name='get_profile'),
-    
-    # 更新個人資料
-    path('profile/', views.update_profile, name='update_profile'),
+    # 個人資料（GET 和 PATCH 共用同一路徑）
+    path('profile/', views.profile_view, name='profile'),
     
     # 上傳頭像
     path('avatar/upload/', views.upload_avatar, name='upload_avatar'),
