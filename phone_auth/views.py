@@ -225,7 +225,8 @@ def verify_otp(request):
         return Response(
             {
                 'status': 'LOCKED',
-                'message': '驗證失敗次數過多，請重新發送驗證碼'
+                'message': '驗證失敗次數過多，請 60 秒後重新發送驗證碼',
+                'retry_after': 60
             },
             status=status.HTTP_403_FORBIDDEN
         )
@@ -236,9 +237,23 @@ def verify_otp(request):
     result = firebase_service.verify_otp(verification_id, otp_code)
     
     if result.get('success'):
-        # 模擬驗證成功（實際應從 result 取得已驗證的手機號碼）
-        verified_phone = user.phone_number
+        # 從 Firebase 驗證結果取得已驗證的手機號碼
+        verified_phone = result.get('phone_number')
+        firebase_uid = result.get('uid')
         
+        # 檢查手機號碼是否與使用者當前綁定的號碼一致
+        if user.phone_number and user.phone_number != verified_phone:
+            logger.warning(f"手機號碼不符：user.phone={user.phone_number}, verified={verified_phone}")
+            return Response(
+                {
+                    'error': 'PHONE_MISMATCH',
+                    'message': '驗證的手機號碼與您的帳號不符，請確認'
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # 更新使用者資料
+        user.phone_number = verified_phone
         user.phone_verified = True
         user.verification_status = CustomUser.VerificationStatus.VERIFIED
         user.otp_attempts = 0
@@ -252,7 +267,7 @@ def verify_otp(request):
             success=True
         )
         
-        logger.info(f"手機驗證成功：user={user.username}, phone={verified_phone}")
+        logger.info(f"手機驗證成功：user={user.username}, phone={verified_phone}, uid={firebase_uid}")
         
         return Response(
             {
@@ -279,7 +294,8 @@ def verify_otp(request):
             return Response(
                 {
                     'status': 'LOCKED',
-                    'message': '驗證失敗次數過多，請重新發送驗證碼'
+                    'message': '驗證失敗次數過多，請 60 秒後重新發送驗證碼',
+                    'retry_after': 60
                 },
                 status=status.HTTP_403_FORBIDDEN
             )

@@ -112,14 +112,17 @@ class FirebaseAuthService:
     
     def verify_otp(self, verification_id: str, otp_code: str) -> dict:
         """
-        驗證 OTP 代碼
+        驗證 OTP 代碼（使用 Firebase ID Token）
         
-        注意：本專案採用 6 位 OTP（verification_id + otp_code）為唯一流程。
-        若在你的架構中需與 Firebase 前端驗證整合，請依實際需求調整此方法實作。
+        實際流程：
+        1. 前端使用 Firebase JS SDK 完成 phone auth（signInWithPhoneNumber + confirm）
+        2. 成功後 Firebase 返回 idToken
+        3. 前端將 idToken 作為 verification_id 傳給後端
+        4. 後端驗證 idToken 並取得已驗證的手機號碼
         
         Args:
-            verification_id: Firebase 返回的驗證 session ID
-            otp_code: 使用者輸入的驗證碼
+            verification_id: Firebase ID Token（前端驗證成功後取得）
+            otp_code: 使用者輸入的驗證碼（用於前端驗證，後端僅記錄）
         
         Returns:
             dict: {
@@ -130,20 +133,48 @@ class FirebaseAuthService:
             }
         """
         try:
-            # 這裡提供一個簡化的實作範例
-            logger.info(f"驗證 OTP：verification_id={verification_id}, code={otp_code}")
+            logger.info(f"開始驗證 Firebase ID Token，OTP code: {otp_code}")
             
-            # 模擬驗證（實際應對接你的 OTP 驗證機制）
+            # 使用 Firebase Admin SDK 驗證 ID Token
+            decoded_token = auth.verify_id_token(verification_id)
+            
+            # 從 token 中取得已驗證的資訊
+            uid = decoded_token.get('uid')
+            phone_number = decoded_token.get('phone_number')
+            
+            if not phone_number:
+                logger.warning("ID Token 中沒有手機號碼資訊")
+                return {
+                    'success': False,
+                    'error': 'ID Token 中沒有手機號碼資訊，請確認前端使用 Phone Auth 方式登入'
+                }
+            
+            logger.info(f"驗證成功：uid={uid}, phone={phone_number}")
             
             return {
                 'success': True,
-                'message': '此為模擬實作，請替換為實際的 OTP 驗證邏輯'
+                'phone_number': phone_number,
+                'uid': uid,
+                'message': '手機號碼驗證成功'
+            }
+            
+        except auth.InvalidIdTokenError:
+            logger.error("無效的 ID Token")
+            return {
+                'success': False,
+                'error': '驗證碼已過期或無效，請重新發送'
+            }
+        except auth.ExpiredIdTokenError:
+            logger.error("ID Token 已過期")
+            return {
+                'success': False,
+                'error': '驗證碼已過期，請重新發送'
             }
         except Exception as e:
             logger.error(f"驗證 OTP 時發生錯誤：{str(e)}")
             return {
                 'success': False,
-                'error': str(e)
+                'error': f'驗證失敗：{str(e)}'
             }
     
     def get_user_by_phone(self, phone_number: str):
