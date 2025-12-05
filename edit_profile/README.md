@@ -103,8 +103,7 @@ edit_profile/
 
 定義了四個主要 API 端點：
 
-- **`update_profile(request)`** - PATCH 端點，更新使用者個人資料
-- **`get_profile(request)`** - GET 端點，獲取使用者個人資料
+- **`profile_view(request)`** - GET/PATCH 端點，獲取或更新使用者個人資料（共用同一路徑）
 - **`upload_avatar(request)`** - POST 端點，上傳使用者頭像
 - **`delete_avatar(request)`** - DELETE 端點，刪除使用者頭像
 
@@ -123,8 +122,7 @@ edit_profile/
 
 ```python
 urlpatterns = [
-    path('profile/', views.get_profile, name='get_profile'),
-    path('profile/', views.update_profile, name='update_profile'),
+    path('profile/', views.profile_view, name='profile'),  # GET 和 PATCH 共用同一路徑
     path('avatar/upload/', views.upload_avatar, name='upload_avatar'),
     path('avatar/', views.delete_avatar, name='delete_avatar'),
 ]
